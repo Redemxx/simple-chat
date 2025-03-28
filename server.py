@@ -1,8 +1,10 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from threading import Thread
 from queue import Queue
+import re
 
 incoming_port = 7580
+username_regex = r"(\B|\b)@.[^ ]+\b"
 
 client_connections = {}
 
@@ -39,9 +41,20 @@ def client_outgoing(socket_conn: socket, queue, username):
         queue.task_done()
 
 
-def forward_message(sender, message):
-    # TODO: Check for direct message and forward only to the recipient.
+def forward_message(sender, message: str):
+    # Direct Message
+    direct_message = re.search(username_regex, message)
+    if direct_message:
+        recipient = direct_message.group(0)[1:]
 
+        try:
+            client_connections[recipient].put(message)
+        except:
+            client_connections[sender].put(f"System: Could not find user {recipient}")
+        finally:
+            return
+
+    # Message all users
     for client in client_connections:
         if client == sender:
             continue
