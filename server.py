@@ -42,6 +42,8 @@ def client_outgoing(socket_conn: socket, queue, username):
 
 
 def forward_message(sender, message: str):
+    message = sender + ": " + message
+
     # Direct Message
     direct_message = re.search(username_regex, message)
     if direct_message:
